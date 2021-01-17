@@ -35,9 +35,16 @@ func (db *MyDriver) QueryRowContext(ctx context.Context, query string, args ...i
 	query, returnStmt := rewrite(query)
 
 	if returnStmt {
-		db.DB.ExecContext(ctx, query, args...)
+		result, err := db.DB.ExecContext(ctx, query, args...)
+		if err != nil {
+			return nil
+		}
+		id, err := result.LastInsertId()
+		if err != nil {
+			return nil
+		}
 
-		return db.DB.QueryRow("SELECT last_insert_rowid();")
+		return db.DB.QueryRow("SELECT ?", id)
 	}
 
 	return db.DB.QueryRowContext(ctx, query, args...)
